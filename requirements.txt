@@ -1,0 +1,9 @@
+streamlit==0.65.2
+numpy==1.18.5
+seaborn==0.10.1
+wordcloud==1.8.0
+pandas==1.0.5
+textblob==0.15.3
+nlppreprocess==1.0.2
+tweepy==3.9.0
+matplotlib==3.2.2
