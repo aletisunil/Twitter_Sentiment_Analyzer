@@ -5,25 +5,24 @@ import tweepy
 from textblob import TextBlob
 from wordcloud import WordCloud
 import re
-
+from spacy.lang.en import English
 from collections import Counter
 import streamlit as st
 import seaborn as sns
-from nlppreprocess import NLP
 
 
 def app():
-    consumerKey=""          #confidential
-    consumerSecretKey=""    #confidential
-    accessToken=""          #confidential
-    accessTokenSecret=""    #confidential
+    consumerKey="" #confidential
+    consumerSecretKey="" #confidential
+    accessToken="" #confidential
+    accessTokenSecret="" #confidential
     #creating an object for authentication
     authenticate=tweepy.OAuthHandler(consumerKey,consumerSecretKey)
     #For access
     authenticate.set_access_token(accessToken,accessTokenSecret)
     #creating an api for retrieving tweets
     api=tweepy.API(authenticate,wait_on_rate_limit=True)
-
+    
     st.title("Tweet Analyzer")
     st.subheader("A Tool which is able to:")
     st.write("Fetch tweets of a user or keyword")
@@ -33,11 +32,10 @@ def app():
 
     st.sidebar.markdown("<h1 style='text-align: center;'>About</h1>", unsafe_allow_html=True)
     st.sidebar.image("https://res.cloudinary.com/practicaldev/image/fetch/s--AhOnOSVL--/c_fill,f_auto,fl_progressive,h_320,q_auto,w_320/https://dev-to-uploads.s3.amazonaws.com/uploads/user/profile_image/340844/c6ddb46a-f369-44ab-bef9-d2d8f953f3ac.png",width=None)
-    st.sidebar.title("Sunil Aleti")
-    st.sidebar.text("Developer at Cognizant")
-    st.sidebar.text("Quite Optimistic about AI")
-    st.sidebar.text("Blogger at DEV Community")
-
+    st.sidebar.title("[Sunil Aleti](https://aletisunil.github.io)")
+    st.sidebar.markdown("Developer at Cognizant")
+    st.sidebar.markdown("Blogger at [DEV Community](https://dev.to/aletisunil)")
+    st.sidebar.markdown("Quite Optimistic about AI")
 
     username=st.text_area("Enter Username without @")
     
@@ -64,6 +62,7 @@ def app():
                 tweet=re.sub(r"RT[\s]+","",tweet)  # To remove RT(retweet symbol)
                 tweet=re.sub(r'@[A-Za-z0-9]+','',tweet) # To remove mentions
                 tweet=re.sub(r'amp',"",tweet)
+                tweet=re.sub(r'&',"and",tweet)
                 tweet=re.sub(r"#","",tweet) # To remove Hashtags
                 tweet=re.sub(r'http\S+', '', tweet,flags=re.MULTILINE) # To remove links
                 tweet=re.sub(r'\n'," ",tweet)
@@ -74,11 +73,21 @@ def app():
 
             df['Tweets']=df['Tweets'].apply(cleanedTweet)
             df2=pd.DataFrame(columns=["tweets"])
-            nlp = NLP(replace_words=True,
-            remove_stopwords=True,
-            remove_numbers=False)
+            #Load English tokenizer, tagger, parser, NER and word vectors
+            nlp = English()
+            from spacy.lang.en.stop_words import STOP_WORDS
+
+            # Create list of word tokens after removing stopwords
+            def removestopword(tweet):
+                #st.write(tweet)
+                tweets=""
+                for i in tweet.split(" "):
+                    lexeme = nlp.vocab[i]
+                    if lexeme.is_stop == False:
+                        tweets+=" "+i
+                return tweets
     
-            df2['tweets'] = df['Tweets'].apply(nlp.process)
+            df2["tweets"]=df["Tweets"].apply(removestopword)
 
 
             def getSubjectivity(text):
@@ -165,7 +174,7 @@ def app():
                     tweet=re.sub(r'@[A-Za-z0-9]+','',tweet) # To remove mentions
                     tweet=re.sub(r'amp',"",tweet)
                     tweet=re.sub(r'\n'," ",tweet)
-                    tweet = ''.join(i for i in tweet if not i in bad_chars) # To remove special characters
+                    #tweet = ''.join(i for i in tweet if not i in bad_chars) # To remove special characters
                     
                     return tweet
 
